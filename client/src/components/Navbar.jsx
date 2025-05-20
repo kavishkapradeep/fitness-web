@@ -56,6 +56,7 @@ const NavItems = styled.div`
 display: flex;
 
 width: 100%;
+justify-content: center;
 gap:32px;
 padding: 0px 6px;
 
