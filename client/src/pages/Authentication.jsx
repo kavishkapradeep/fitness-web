@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import LogoImage from '../utils/images/Logo.png';
 import AuthImage from '../utils/images/Authimage.jpg'
+import Signin from '../components/Signin';
+import SignUp from '../components/SignUp';
 
 const Container = styled.div`
  flex: 1;
@@ -37,17 +39,40 @@ const Image = styled.img`
 
 const Right = styled.div`
  flex: 1;
- background:green`
+ position: relative;
+ display: flex;
+ flex-direction: column;
+ padding: 40px;
+ gap:16px
+ align-items: center;`
+
+ const Text = styled.div`
+ color: ${({theme})=>theme.text_secondary};
+ margin-top: 16px;
+ @media (max-width: 400px) {
+    font-size: 14px;
+ }
+ `
+ const TextButton = styled.div`
+ `
 
 const Authentication = () => {
-
+const [login ,setLogin] = useState(false);
   return (
     <Container>
         <Left>
             <Logo src={LogoImage}/>
             <Image src={AuthImage}/>
         </Left>
-       <Right>R</Right>
+       <Right>{!login?(<>
+       <Signin/>
+       <Text>Don't have an account ? <TextButton
+       onClick={()=>setLogin(true)}>SignUp</TextButton></Text>
+       </>):(<>
+       <SignUp/>
+         <Text>Already have an account ? <TextButton
+         onClick={()=>setLogin()}>SignIn</TextButton></Text>
+       </>)}</Right>
     </Container>
   );
 }
