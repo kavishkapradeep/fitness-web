@@ -2,6 +2,7 @@ import { BarChart } from '@mui/x-charts/BarChart';
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import TextInput from './TextInput';
+import Button from './Button';
 
 const Card = styled.div`
     flex: 1;
@@ -40,6 +41,7 @@ const AddWorkout = () => {
         -Reps
         -Weight
         -Duration`} value={workout} handelChange={(e)=>setWorkout(e.target.value)}/>
+        <Button/>
     </Card>
   );
 }
