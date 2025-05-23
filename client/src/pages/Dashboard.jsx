@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { use, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import {counts} from '../utils/data.jsx'
 import CountsCard from '../components/cards/CountsCard.jsx';
@@ -6,6 +6,7 @@ import WeeklyStatCard from '../components/cards/WeeklyStatCard.jsx';
 import CategoryChartCard from '../components/cards/CategoryChartCard.jsx';
 import AddWorkout from '../components/AddWorkout.jsx';
 import WorkoutCard from '../components/cards/WorkoutCard.jsx';
+import { addWorkouts, getDashboardDetails, getWorkouts } from '../api/index.js';
 
 const Container = styled.div`
     flex: 1;
@@ -51,32 +52,93 @@ justify-content: center;
 gap: 20px;`
 const Dashboard = () => {
 
-    const data = {
-        totalCaloriesBurnt :13500,
-        totalWorkouts : 6,
-        avgCaloriesBurntPerWorkout : 2250,
-        totalWeeksCaloriesBurnt : {
-            weeks:['17th','18th','19th','20th','21th','22th','23th'],
-            caloriesBurned:[10500,0,0,0,0,0,13500]
-        },
-        pieChartData :[
-            {
-                id:0,
-                value:1500,
-                label:'Back'
-            },
-            {
-                id:2,
-                value:3750,
-                label:'Shoulder'
-            },
-            {
-                id:3,
-                value:2250,
-                label:'ABS'
-            }    
-        ]
+    const [data,setData] = useState()
+    const [todayWorkout,setTodayWorkout] = useState([])
+    const [buttonLoading,setButtonLoading] = useState(false)
+    const [loading,setLoading] = useState(false)
+    const [workout,setWorkout] = useState(
+       `# Legs
+- Back Squat
+- 5 sets 15 reps
+- 30kg
+- 10min`
+    )
+
+    const dashboardData =  async () => {
+        setLoading(true)
+        const token = localStorage.getItem('fittrack-app-token')
+        await getDashboardDetails(token).then((res)=>{
+            setData(res.data)
+            setLoading(false)
+            console.log(res.data);
+            
+            
+        })
     }
+
+    function formatDateToDDMMYYYY(dateString) {
+  const date = new Date(dateString);
+  if (isNaN(date)) return "Invalid date";
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+  const year = date.getFullYear();
+
+  return `${day}-${month}-${year}`;
+}
+
+      const getTodayWorkout =  async () => {
+        setLoading(true)
+        const token = localStorage.getItem('fittrack-app-token')
+          const todayDate = new Date().toISOString().split('T')[0]; 
+        
+        const today = formatDateToDDMMYYYY(todayDate)
+
+        await getWorkouts(token,today).then((res)=>{
+            setTodayWorkout(res?.data?.todaysWorkouts)
+           
+            setLoading(false)
+            console.log(res.data.todaysWorkouts
+);
+            
+            
+        })
+    }
+
+    const addNewWorkout = async () => {
+        setButtonLoading(true)
+        const token = localStorage.getItem('fittrack-app-token')
+
+          if (!token) {
+      throw new Error("Authentication token not found.");
+    }
+
+    if (!workout) {
+      throw new Error("Workout data is missing.");
+    }
+    console.log(token,workout);
+    
+
+        await addWorkouts(token,{workoutString :workout}).then((res)=>{
+            dashboardData()
+            setButtonLoading(false)
+            getTodayWorkout()
+        }).catch((err)=>{
+            alert(err)
+            setButtonLoading(false)
+        })
+    }
+
+    useEffect(() => {
+        dashboardData()
+       getTodayWorkout()
+        
+    },[])
+
+    useEffect(()=>{
+     
+        
+    },[])
 
   return (
     <Container>
@@ -90,13 +152,16 @@ const Dashboard = () => {
             <FlexWrap>
               <WeeklyStatCard data={data} />
               <CategoryChartCard  data={data}/>
-              <AddWorkout/>
+              <AddWorkout workout={workout} setWorkout={setWorkout} 
+              addNewWorkout={addNewWorkout} buttonLoading={buttonLoading}/>
          </FlexWrap>
         
         <Section>
             <Title>Today Workous</Title>
             <CardWrapper>
-                <WorkoutCard/>
+                {todayWorkout.map((item) => (
+                            <WorkoutCard data={data} workout={item} />
+                        ))}
             </CardWrapper>
         </Section>
 

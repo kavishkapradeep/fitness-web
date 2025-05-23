@@ -1,4 +1,4 @@
-import { FitnessCenterRounded } from '@mui/icons-material';
+import { FitnessCenterRounded, TimelapseRounded } from '@mui/icons-material';
 import React from 'react';
 import styled from 'styled-components';
 
@@ -44,15 +44,20 @@ display: flex;
 align-items: center;
 gap: 6px;`
 
-const WorkoutCard = () => {
+const WorkoutCard = ({workout}) => {
   return (
     <Card>
-       <Category>#Legs</Category>
-       <Name>Back Squat</Name>
-       <Sets>Count :5sets x 10reps</Sets>
+       <Category>#{workout?.category}</Category>
+       <Name>{workout?.workoutName}</Name>
+       <Sets>Count :{workout?.sets} x {workout?.reps}</Sets>
        <Flex>
           <Details>
               <FitnessCenterRounded sx={{fontSize:"20px"}}/>
+              {workout?.weight} kg
+          </Details>
+          <Details>
+              <TimelapseRounded sx={{fontSize:"20px"}}/>
+              {workout?.duration} min
           </Details>
        </Flex>
     </Card>

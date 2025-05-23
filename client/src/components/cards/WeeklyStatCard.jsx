@@ -29,9 +29,9 @@ const WeeklyStatCard = ({data}) => {
   return (
     <Card>
        <Title>Weekly Calories Burned</Title>
-       {data?.totalWeeksCaloriesBurnt && (<BarChart
-       xAxis={[{scaleType:'band',data:data?.totalWeeksCaloriesBurnt?.weeks}]} 
-       series={[{data:data?.totalWeeksCaloriesBurnt?.caloriesBurned}]}
+       {data?.totalCaloriesBurnt && (<BarChart
+       xAxis={[{scaleType:'band',data:data?.totalCaloriesBurnt?.weeks}]} 
+       series={[{data:data?.totalCaloriesBurnt?.caloriesBurnd}]}
        height={300}/>)}
     </Card>
   );

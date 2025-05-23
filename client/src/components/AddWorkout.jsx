@@ -27,8 +27,8 @@ const Title = styled.div`
     }
 `
 
-const AddWorkout = () => {
-    const [workout, setWorkout] =useState("");
+const AddWorkout = ({workout,setWorkout,addNewWorkout,buttonLoading}) => {
+   
   return (
     <Card>
        <Title>Add New Workout</Title>
@@ -41,7 +41,8 @@ const AddWorkout = () => {
         -Reps
         -Weight
         -Duration`} value={workout} handelChange={(e)=>setWorkout(e.target.value)}/>
-        <Button/>
+        <Button text="Add Workout" small onClick={()=>addNewWorkout()}
+            isLoading={buttonLoading} isDisabled={buttonLoading}/>
     </Card>
   );
 }

@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-
+import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import { createError } from '../error.js';
 import User from '../models/User.js';
@@ -78,27 +78,33 @@ export const getUserDashboard = async (req,res,next) => {
             currentDateFormatted.getMonth(),
             currentDateFormatted.getDate() + 1,
         )                                           
-
+        
         //calculate the total calories burned today
         const totalCaloriesBurnt = await Workout.aggregate([
             {$match:{user:user._id, date:{$gte:startToday, $lt:endToday}}},
             {$group:{_id:null, totalCaloriesBurnt:{$sum:'$caloriesBurned'}}}
         ])
 
+    
         //Calculate total no of workouts
         const totalWorkouts = await Workout.countDocuments({
             user:userId,
             date:{$gte:startToday, $lt:endToday}
         })
+
+        
+        
         //Calculate average calories burnt per workout
         const avgCaloriesBurntPerWorkout = 
-         totalCaloriesBurnt.length>0 ? totalCaloriesBurnt[0].totalCaloriesBurnt / totalWorkouts : 0
+         totalCaloriesBurnt.length>0 ? (totalCaloriesBurnt[0].totalCaloriesBurnt / totalWorkouts).toFixed(2) : 0
     
+         
+         
          //Fetch category of  workouts
          const categoryCalories = await Workout.aggregate([
             
              { $match: {
-                user: userId,
+                user: new mongoose.Types.ObjectId(userId),
                 date: { $gte: startToday, $lt: endToday },
               }},  
               
@@ -107,6 +113,8 @@ export const getUserDashboard = async (req,res,next) => {
                   totalCaloriesBurnt: { $sum: "$caloriesBurned" },
                 }} 
          ])
+
+
 
          //Format category  data for pie chart
          const pieChartData = categoryCalories.map((category,index)=>({
@@ -135,22 +143,23 @@ export const getUserDashboard = async (req,res,next) => {
                 date.getDate() + 1
             )
         
+console.log(userId + " " + startDate + endDate);
 
          const weekData = await Workout.aggregate([
-            { $match: { user: userId, date: { $gte: startDate, $lt: endDate } } },
-             { $group: { _id:{ $dateToString:{format:'%Y-%m-%d',date:'$date'}}, 
+            { $match: { user:  new mongoose.Types.ObjectId(userId), date: { $gte: startDate, $lt: endDate } } },
+             { $group: { _id:{ $dateToString:{format:'%m-%d-%Y',date:'$date'}}, 
              totalCaloriesBurnt: { $sum: "$caloriesBurned" } } },
              {
                 $sort :{_id:1}
              }
          ])
 
+
+
          caloriesBurnt.push(weekData[0]?.totalCaloriesBurnt ? weekData[0]?.totalCaloriesBurnt : 0)
  }
          return res.status(200).json({
-            totalCaloriesBurnt:
-              totalCaloriesBurnt.length>0 ?
-              totalCaloriesBurnt[0].totalCaloriesBurnt : 0,
+            totalCalories:totalCaloriesBurnt[0].totalCaloriesBurnt,
             totalWorkouts:totalWorkouts,
             avgCaloriesBurntPerWorkout:avgCaloriesBurntPerWorkout,
             totalCaloriesBurnt :{
@@ -169,7 +178,16 @@ export const getWorkoutsByDate = async (req,res,next) => {
     try {
         const userId = req.user?.id;
         const user = await User.findById(userId);
-        let date = req.query.date ? new Date(req.query.date) : new Date();
+        console.log(req.params.date);
+        
+      
+        // Split the date string in 'DD-MM-YYYY' format
+        const [day, month, year] = req.params.date.split('-');
+        const date = new Date(year, month - 1, day);  // month is 0-indexed in JS
+
+        console.log("Parsed date:", date);
+      
+        
         if (!user) {
             return next(createError(404, "User not found"));                
         }
@@ -178,7 +196,8 @@ export const getWorkoutsByDate = async (req,res,next) => {
             date.getMonth(),
             date.getDate()
         )
-        const endDate = new Date(
+           
+         const endDate = new Date(
             date.getFullYear(),
             date.getMonth(),
             date.getDate() + 1
@@ -205,8 +224,8 @@ export const addWorkout = async (req,res,next) => {
         if (!workoutString) {
             return next(createError(400, "Workout string is required"));
         }
-        const eachWorkout = workoutString.split(',').map((workout) => {line.trim()})
-        const categories = eachWorkout.filter((line)=>line.startsWith('#')    )
+        const eachWorkout = workoutString.split(',').map((workout) => workout.trim())
+        const categories = eachWorkout.filter((line)=>line.startsWith('# ')    )
         if (categories.length === 0) {
             return next(createError(400, "Workout string is not valid"));
             
@@ -219,7 +238,7 @@ export const addWorkout = async (req,res,next) => {
             count++
             if (line.startsWith('#')) {
                const parts = line?.split('\n').map((part) => part.trim())
-               console.log(parts);
+               console.log("parts in"+parts);
                 if (parts.length <5) {
                     return next(createError(400, "Workout string is not valid"));
                 }
@@ -242,7 +261,7 @@ export const addWorkout = async (req,res,next) => {
             workout.caloriesBurned = parseFloat(calculateCaloriesBurnt(workout))
             await Workout.create({...workout, user:userId})
         })
-
+        
         return res.status(200).json({message:'Workout added successfully',
             workouts:parseWorkouts,
         })
@@ -257,9 +276,9 @@ const parseWorkoutLine = (parts)=>{
     if (parts.length >=5) {
         details.workoutName = parts[1].substring(1).trim();
         details.sets = parseInt(parts[2].split('sets')[0].substring(1).trim());
-        details.reps = parseInt(parts[2].split('sets')[1].split('sets')[0].substring(1).trim());
-        details.weight = parseInt(parts[3].split('Kg')[0].substring(1).trim());
-        details.duration = parseInt(parts[4].split(',in')[0].substring(1).trim());
+        details.reps = parseInt(parts[2].split('sets')[1].split('reps')[0].substring(1).trim());
+        details.weight = parseInt(parts[3].split('kg')[0].substring(1).trim());
+        details.duration = parseInt(parts[4].split('min')[0].substring(1).trim());
         console.log(details);
         return details;
     }

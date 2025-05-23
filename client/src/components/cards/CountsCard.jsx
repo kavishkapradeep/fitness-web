@@ -71,12 +71,24 @@ margin-bottom:6px;
 `
 
 const CountsCard = ({ item,data }) => {
+
+   let value = 0;
+
+  if (!data) {
+    value = 0;
+  } else if (item.key === "totalCaloriesBurnt") {
+    const arr = data.totalCaloriesBurnt?.caloriesBurnd || [];
+    value = arr.reduce((sum, val) => sum + val, 0);
+  
+  } else {
+    value = data[item.key] ?? 0;
+  }
   return (
     <Card>
       <Left>
         <Title>{item.name}</Title>
         <Value>
-          {data && data[item.key].toFixed(2) }
+          {value }
           <Unit>{item.unit}</Unit>
           <Span positive>(+10%)</Span>
         </Value>

@@ -5,6 +5,11 @@ import WorkoutCard from '../components/cards/WorkoutCard';
 import  {LocalizationProvider} from '@mui/x-date-pickers/LocalizationProvider';
 import {DateCalendar} from '@mui/x-date-pickers/DateCalendar';
 import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs';
+import { useState } from 'react';
+
+import { getWorkouts } from '../api';
+import { useEffect } from 'react';
+import { CircularProgress } from '@mui/material';
 
 
 const Container = styled.div`
@@ -61,21 +66,49 @@ color: ${({theme})=>theme.text_primary};
 font-weight: 500;`
 
 const Workouts = () => {
+
+  
+  const [date,setDate] = useState('')
+  const [loading,setLoading] =useState(false)
+  const [todaysWorkouts,setTodayWorkouts] =useState([])
+
+  const getTodaysWorkout = async () => {
+    setLoading(true)
+    console.log(date);
+    
+    const token = localStorage.getItem('fittrack-app-token')
+    await  getWorkouts(token, date ?`${date}`:"").then((res)=>{
+       setTodayWorkouts(res?.data?.todaysWorkouts
+)
+       console.log(res.data.todaysWorkouts
+);
+       setLoading(false)
+      
+    })
+    
+  }
+useEffect(()=>{
+  getTodaysWorkout();
+},[date])
   return (
     <Container>
         <Wrapper>
             <Left>
               <Title>Select Date</Title>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
-                   <DateCalendar/>
+                   <DateCalendar onChange={(e)=>setDate(e.format('DD-MM-YYYY'))}/>
               </LocalizationProvider>
             </Left>
             <Right>
                 <Section>
                      <SecTitle>Todays Workout</SecTitle>
-                     <CardWrapper>
-                          <WorkoutCard/>
-                     </CardWrapper>
+                     {loading?(<CircularProgress/>):(
+                      <CardWrapper>
+                          {todaysWorkouts.map((workout)=>(
+                            <WorkoutCard key={workout._id || index} workout={workout}/>
+                          ))}
+                      </CardWrapper>
+                     )}
                 </Section>
             </Right>
         </Wrapper>

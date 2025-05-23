@@ -11,7 +11,7 @@ export const counts = [
       <LocalFireDepartmentRounded sx={{ color: "inherit", fontSize: "26px" }} />
     ),
     desc: "Total calories burned today",
-    key: "totalCaloriesBurnt",
+    key: "totalCalories",
     unit: "kcal",
     color: "#eb9e34",
     lightColor: "#FDF4EA",
