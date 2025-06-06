@@ -19,7 +19,7 @@
 
 ## 🛠 Tech Stack
 
-- **Frontend**: React, Redux
+- **Frontend**: React, Redux,
 - **Backend**: Node.js, Express
 - **Database**: MongoDB
 
